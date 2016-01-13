@@ -1,3 +1,5 @@
 #!/bin/bash
 
-docker build -t catatnight/postfix .
+set -e
+version=$(cat VERSION.txt)
+docker build -t elastisys/docker-postfix:${version} .
