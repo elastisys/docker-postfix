@@ -108,6 +108,7 @@ SignatureAlgorithm      rsa-sha256
 UserID                  opendkim:opendkim
 
 Socket                  inet:12301@localhost
+RequireSafeKeys         false
 EOF
 cat >> /etc/default/opendkim <<EOF
 SOCKET="inet:12301@localhost"
@@ -126,5 +127,5 @@ EOF
 cat >> /etc/opendkim/SigningTable <<EOF
 *@$maildomain mail._domainkey.$maildomain
 EOF
-chown opendkim:opendkim $(find /etc/opendkim/domainkeys -iname *.private)
-chmod 400 $(find /etc/opendkim/domainkeys -iname *.private)
+#chown opendkim:opendkim $(find /etc/opendkim/domainkeys -iname *.private)
+#chmod 400 $(find /etc/opendkim/domainkeys -iname *.private)
