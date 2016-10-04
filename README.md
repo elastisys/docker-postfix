@@ -31,10 +31,14 @@ TLS and OpenDKIM support are optional.
 			-v /path/to/domainkeys:/etc/opendkim/domainkeys \
 			--name postfix -d catatnight/postfix
 	```
-3. Enable TLS(587): save your SSL certificates ```.key``` and ```.crt``` to  ```/path/to/certs```
+3. Start a TLS-supporting server by saving your SSL certificates ```.key``` and ```.crt``` 
+   to  ```/path/to/certs```. This makes TLS optional on 25 (`STARTTLS` announced), TLS
+   requied on port 587 (`STARTTLS` with required TLS), and pure TLS 
+   ([SMTPS](https://en.wikipedia.org/wiki/SMTPS)) supported on port 465).  
+   *Note: to disable any of the ports, simply don't expose it to the host*: 
 
 	```bash
-	$ sudo docker run -p 587:587 \
+	$ sudo docker run -p 25:25 -p 587:587 -p 465:465 \
 			-e maildomain=mail.example.com -e smtp_user=user:pwd \
 			-v /path/to/certs:/etc/postfix/certs \
 			--name postfix -d catatnight/postfix

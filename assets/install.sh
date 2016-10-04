@@ -29,6 +29,8 @@ chmod +x /opt/postfix.sh
 postconf -e myhostname=$maildomain
 postconf -F '*/*/chroot = n'
 
+
+
 ############
 # SASL SUPPORT FOR CLIENTS
 # The following options set parameters needed by Postfix to enable
@@ -38,6 +40,7 @@ postconf -F '*/*/chroot = n'
 postconf -e smtpd_sasl_auth_enable=yes
 postconf -e broken_sasl_auth_clients=yes
 postconf -e smtpd_recipient_restrictions=permit_sasl_authenticated,reject_unauth_destination
+
 # smtpd.conf
 cat >> /etc/postfix/sasl/smtpd.conf <<EOF
 pwcheck_method: auxprop
@@ -57,15 +60,34 @@ chown postfix.sasl /etc/sasldb2
 if [[ -n "$(find /etc/postfix/certs -iname *.crt)" && -n "$(find /etc/postfix/certs -iname *.key)" ]]; then
   # /etc/postfix/main.cf
   postconf -e smtpd_tls_cert_file=$(find /etc/postfix/certs -iname *.crt)
-  postconf -e smtpd_tls_key_file=$(find /etc/postfix/certs -iname *.key)
+  postconf -e smtpd_tls_key_file=$(find /etc/postfix/certs -iname *.key)  
   chmod 400 /etc/postfix/certs/*.*
+
+  # /etc/postfix/main.cf
+  # port 25 will announce STARTTLS but accept mails without TLS.
+  # to force use of TLS on port 25 (that is, announce STARTTLS and accept no mail without TLS)
+  # set value to 'encrypt'
+  postconf -e smtpd_tls_security_level=may
+
   # /etc/postfix/master.cf
+  # submission (port 587):
+  # 587 will announce STARTTLS and require clients to switch to TLS
   postconf -M submission/inet="submission   inet   n   -   n   -   -   smtpd"
   postconf -P "submission/inet/syslog_name=postfix/submission"
   postconf -P "submission/inet/smtpd_tls_security_level=encrypt"
   postconf -P "submission/inet/smtpd_sasl_auth_enable=yes"
   postconf -P "submission/inet/milter_macro_daemon_name=ORIGINATING"
   postconf -P "submission/inet/smtpd_recipient_restrictions=permit_sasl_authenticated,reject_unauth_destination"
+
+  # smtps (port 465): always requires SSL/TLS
+  # see http://www.postfix.org/TLS_README.html#server_enable
+  postconf -M smtps/inet="smtps   inet   n   -   n   -   -   smtpd"
+  postconf -P "smtps/inet/syslog_name=postfix/smtps"
+  # non-standard "wrapper mode" where server always requires TLS instead of announcing STARTTLS
+  postconf -P "smtps/inet/smtpd_tls_wrappermode=yes"
+  postconf -P "smtps/inet/smtpd_sasl_auth_enable=yes"
+  postconf -P "smtps/inet/smtpd_recipient_restrictions=permit_sasl_authenticated,reject_unauth_destination"
+  postconf -P "smtps/inet/milter_macro_daemon_name=ORIGINATING"  
 fi
 
 #############
